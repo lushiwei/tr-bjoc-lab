@@ -63,7 +63,9 @@ app.post('/slack-eiw', function (req, res) {
         q_company(req, res);
     } else if (action && action == 'q_project' && req.body.result.parameters.Project) {
         q_project(req, res);
-    } else {
+    } else if (action && action == 'acronym.service') {
+		q_acronym(req, res);
+	} else {
         return res.json({
             speech: "ZZS",
             displayText: "speech",
@@ -273,3 +275,50 @@ function get_pg_client() {
 app.listen((process.env.PORT || 8000), function () {
     console.log("Server up and listening");
 });
+
+//Search acronym from database
+function q_acronym(req, res) {
+    var client = get_pg_client();
+    var people = {};
+    var err = {};
+    var _name = '-';
+
+    if (req.body.result.parameters.any) {
+        _name = req.body.result.parameters.any;
+    }
+    if (req.body.result.parameters.acronym) {
+        _name = req.body.result.parameters.acronym;
+    }
+	
+    client.connect(function (err) {
+        if (err) {
+            console.log(err);
+            res.json(err);
+        }
+
+    });
+
+    console.log("DB connected~~!")
+
+    client.query('SELECT * FROM acronym where name =\'' + _name + '\'',
+        function (err, result) {
+            if (err) {
+                return res.json(err);
+            } else {
+                if (result.rowCount > 0) {
+                    var slack_message = {"text": result.rows[0].value };
+                    return res.json({
+                        speech: result.rows[0].logo,
+                        displayText: "speech",
+                        source: 'webhook-eiw-demo',
+                        data: {
+                            "slack": slack_message
+                        }
+                    });
+                } else {
+                    return res.json({});
+                };
+            }
+        });
+};
+
