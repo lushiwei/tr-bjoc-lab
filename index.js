@@ -308,7 +308,7 @@ function q_acronym(req, res) {
                 if (result.rowCount > 0) {
                     var slack_message = {"text": result.rows[0].value };
                     return res.json({
-                        speech: result.rows[0].logo,
+						speech: result.rows[0].value,
                         displayText: "speech",
                         source: 'webhook-eiw-demo',
                         data: {
