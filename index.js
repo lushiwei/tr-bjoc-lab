@@ -312,24 +312,25 @@ function q_acronym(req, res) {
                 return res.json(err);
             } else {
                 if (result.rowCount > 0) {
-                    var slack_message = {"text": result.rows[0].value };
+                    var msg = result.rows[0].value;
 					client.end();
                     return res.json({
-						speech: result.rows[0].value,
+						speech: msg,
                         displayText: "speech",
                         source: 'webhook-acronym',
                         data: {
-                            "slack": slack_message
+                            "slack": {"text": msg }
                         }
                     });
                 } else {
 					client.end();
+					var msg = "Acronym not found.";
                     return res.json({
-						speech: "I don't know.",
+						speech: msg,
                         displayText: "speech",
                         source: 'webhook-acronym',
                         data: {
-                            "slack": slack_message
+                            "slack": {"text": msg }
                         }
                     });
                 };
