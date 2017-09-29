@@ -63,7 +63,7 @@ app.post('/slack-eiw', function (req, res) {
         q_company(req, res);
     } else if (action && action == 'q_project' && req.body.result.parameters.Project) {
         q_project(req, res);
-    } else if (action && action == 'acronym.service') {
+    } else if (action && action == 'acronym.service' && req.body.result.parameters.any) {
 		q_acronym(req, res);
 	} else {
         return res.json({
@@ -276,6 +276,17 @@ app.listen((process.env.PORT || 8000), function () {
     console.log("Server up and listening");
 });
 
+app.post('/acronym', function (req, res) {
+    var action = req.body.result.action;
+
+    var slack_message = welcome();
+    if (action && action == 'acronym.service' && req.body.result.parameters.any) {
+		q_acronym(req, res);
+	} else {
+		return res.json({});
+    }
+});
+
 //Search acronym from database
 function q_acronym(req, res) {
     var client = get_pg_client();
@@ -283,19 +294,13 @@ function q_acronym(req, res) {
     var err = {};
     var _name = '-';
 
-    if (req.body.result.parameters.any) {
-        _name = req.body.result.parameters.any;
-    }
-    if (req.body.result.parameters.acronym) {
-        _name = req.body.result.parameters.acronym;
-    }
+    _name = req.body.result.parameters.any;
 	
     client.connect(function (err) {
         if (err) {
             console.log(err);
             res.json(err);
         }
-
     });
 
     console.log("DB connected~~!")
@@ -303,19 +308,22 @@ function q_acronym(req, res) {
     client.query('SELECT * FROM acronym where name =\'' + _name + '\'',
         function (err, result) {
             if (err) {
+				client.end();
                 return res.json(err);
             } else {
                 if (result.rowCount > 0) {
                     var slack_message = {"text": result.rows[0].value };
+					client.end();
                     return res.json({
 						speech: result.rows[0].value,
                         displayText: "speech",
-                        source: 'webhook-eiw-demo',
+                        source: 'webhook-acronym',
                         data: {
                             "slack": slack_message
                         }
                     });
                 } else {
+					client.end();
                     return res.json({});
                 };
             }
