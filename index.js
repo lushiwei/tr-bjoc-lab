@@ -294,7 +294,7 @@ function q_acronym(req, res) {
     var err = {};
     var _name = '-';
 
-    _name = req.body.result.parameters.any;
+    _name = req.body.result.parameters.any.toUpperCase();
 	
     client.connect(function (err) {
         if (err) {
@@ -324,7 +324,14 @@ function q_acronym(req, res) {
                     });
                 } else {
 					client.end();
-                    return res.json({});
+                    return res.json({
+						speech: "I don't know.",
+                        displayText: "speech",
+                        source: 'webhook-acronym',
+                        data: {
+                            "slack": slack_message
+                        }
+                    });
                 };
             }
         });
